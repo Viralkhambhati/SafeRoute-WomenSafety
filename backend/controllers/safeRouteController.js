@@ -103,26 +103,52 @@ async function fetchOSMData(south, west, north, east) {
     const url = new URL("https://overpass-api.de/api/interpreter");
     url.searchParams.set("data", query);
 
-    const res = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-            "Accept": "*/*",
-            "User-Agent": "SafeRoute/1.0",
-        },
-    });
-    if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(`Overpass API error: ${res.status} ${res.statusText}${text ? ` - ${text.slice(0, 120)}` : ""}`);
-    }
-    const data = await res.json();
+    let lastError;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const nodes = new Map();
-    const ways = [];
-    for (const el of data.elements) {
-        if (el.type === "node") nodes.set(String(el.id), { lat: el.lat, lng: el.lon });
-        else if (el.type === "way" && el.nodes) ways.push({ nodes: el.nodes.map(String) });
+        try {
+            const res = await fetch(url.toString(), {
+                method: "GET",
+                headers: {
+                    "Accept": "*/*",
+                    "User-Agent": "SafeRoute/1.0",
+                },
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+                const text = await res.text().catch(() => "");
+                throw new Error(`Overpass API error: ${res.status} ${res.statusText}${text ? ` - ${text.slice(0, 120)}` : ""}`);
+            }
+            const data = await res.json();
+
+            const nodes = new Map();
+            const ways = [];
+            for (const el of data.elements) {
+                if (el.type === "node") nodes.set(String(el.id), { lat: el.lat, lng: el.lon });
+                else if (el.type === "way" && el.nodes) ways.push({ nodes: el.nodes.map(String) });
+            }
+            return { nodes, ways };
+        } catch (err) {
+            clearTimeout(timeoutId);
+            lastError = err;
+            if (attempt === 1) {
+                await new Promise(r => setTimeout(r, 1000));
+                continue;
+            }
+            break;
+        }
     }
-    return { nodes, ways };
+
+    if (lastError) {
+        if (lastError.name === "AbortError") {
+            throw new Error("Overpass API request timed out. Please try again.");
+        }
+        throw lastError;
+    }
 }
 
 // ─── Graph Builder ────────────────────────────────────────────────────────────
@@ -232,7 +258,11 @@ exports.getSafeRoute = async (req, res) => {
         });
 
     } catch (err) {
-        console.error("Safe route error:", err.message);
-        return res.status(500).json({ success: false, message: err.message });
+        const message = err.message || "Network error";
+        console.error("Safe route error:", message);
+        if (message.includes("Overpass API error") || message.includes("fetch failed")) {
+            return res.status(502).json({ success: false, message: "Route service unavailable. Please try again later." });
+        }
+        return res.status(500).json({ success: false, message: "Unable to calculate safe route. Please try again." });
     }
 };

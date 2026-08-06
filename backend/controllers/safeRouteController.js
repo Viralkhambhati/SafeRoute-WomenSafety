@@ -92,7 +92,7 @@ function edgePenalty(lat, lng, redZones) {
 // ─── Overpass OSM Fetch ───────────────────────────────────────────────────────
 async function fetchOSMData(south, west, north, east) {
     const query = `
-    [out:json][timeout:30];
+    [out:json][timeout:25];
     (
       way["highway"~"^(primary|secondary|tertiary|residential|unclassified|trunk|motorway|service|living_street)$"](${south},${west},${north},${east});
     );
@@ -100,12 +100,20 @@ async function fetchOSMData(south, west, north, east) {
     >;
     out skel qt;
   `;
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `data=${encodeURIComponent(query)}`,
+    const url = new URL("https://overpass-api.de/api/interpreter");
+    url.searchParams.set("data", query);
+
+    const res = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+            "Accept": "*/*",
+            "User-Agent": "SafeRoute/1.0",
+        },
     });
-    if (!res.ok) throw new Error(`Overpass API error: ${res.status}`);
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Overpass API error: ${res.status} ${res.statusText}${text ? ` - ${text.slice(0, 120)}` : ""}`);
+    }
     const data = await res.json();
 
     const nodes = new Map();

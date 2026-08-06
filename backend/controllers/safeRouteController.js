@@ -140,6 +140,7 @@ function sleep(ms) {
 }
 
 // ─── Overpass OSM Fetch ───────────────────────────────────────────────────────
+// ─── Overpass OSM Fetch (Fixed for Live/Render) ───────────────────────────────
 async function fetchOSMData(south, west, north, east) {
     const cacheKey = bboxCacheKey(south, west, north, east);
     const cached = getCachedOSM(cacheKey);
@@ -148,43 +149,52 @@ async function fetchOSMData(south, west, north, east) {
         return cached;
     }
 
-    const query = `
-    [out:json][timeout:25];
-    (
-      way["highway"~"^(primary|secondary|tertiary|residential|unclassified|trunk|motorway|service|living_street)$"](${south},${west},${north},${east});
-    );
-    out body;
-    >;
-    out skel qt;
-  `;
+    const query = `[out:json][timeout:15];
+(
+  way["highway"~"^(primary|secondary|tertiary|residential|unclassified|trunk|motorway|service|living_street)$"](${south},${west},${north},${east});
+);
+out body;
+>;
+out skel qt;`;
+
+    // Updated reliable endpoints order
+    const LIVE_ENDPOINTS = [
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://lz4.overpass-api.de/api/interpreter",
+        "https://overpass-api.de/api/interpreter"
+    ];
 
     let lastError;
-    const backoffMs = [1000, 2000, 4000]; // one delay per retry attempt across mirrors
 
-    let attempt = 0;
-    for (const endpoint of OVERPASS_ENDPOINTS) {
-        const url = new URL(endpoint);
-        url.searchParams.set("data", query);
-
+    for (let i = 0; i < LIVE_ENDPOINTS.length; i++) {
+        const endpoint = LIVE_ENDPOINTS[i];
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 sec timeout
 
         try {
-            const res = await fetch(url.toString(), {
-                method: "GET",
+            // Using POST instead of GET to avoid long URL issues on Datacenters
+            const res = await fetch(endpoint, {
+                method: "POST",
                 headers: {
-                    "Accept": "*/*",
+                    "Content-Type": "application/x-www-form-urlencoded",
                     "User-Agent": OVERPASS_USER_AGENT,
+                    "Accept": "application/json"
                 },
+                body: "data=" + encodeURIComponent(query),
                 signal: controller.signal,
             });
+            
             clearTimeout(timeoutId);
 
             if (!res.ok) {
-                const text = await res.text().catch(() => "");
-                throw new Error(`Overpass API error: ${res.status} ${res.statusText}${text ? ` - ${text.slice(0, 120)}` : ""}`);
+                throw new Error(`Status ${res.status} ${res.statusText}`);
             }
+
             const data = await res.json();
+
+            if (!data || !data.elements) {
+                throw new Error("Invalid OSM response payload");
+            }
 
             const nodes = new Map();
             const ways = [];
@@ -195,34 +205,21 @@ async function fetchOSMData(south, west, north, east) {
 
             const result = { nodes, ways };
             setCachedOSM(cacheKey, result);
-            if (attempt > 0) console.log(`Overpass succeeded on mirror #${attempt + 1} (${endpoint})`);
             return result;
+
         } catch (err) {
             clearTimeout(timeoutId);
             lastError = err;
-            // Log the FULL reason — err.cause holds the real system error
-            // (ENOTFOUND, ECONNREFUSED, timeout, etc) that was getting lost before.
-            console.warn(
-                `Overpass endpoint failed [${endpoint}]:`,
-                err.message,
-                "| cause:", err.cause?.message || err.cause || err.code || "unknown"
-            );
-
-            attempt++;
-            if (attempt < OVERPASS_ENDPOINTS.length) {
-                const delay = backoffMs[attempt - 1] || 4000;
-                await sleep(delay);
+            console.warn(`Overpass Mirror #${i + 1} Failed [${endpoint}]:`, err.message);
+            
+            // Wait 1 second before trying next mirror
+            if (i < LIVE_ENDPOINTS.length - 1) {
+                await sleep(1000);
             }
         }
     }
 
-    // All mirrors exhausted
-    if (lastError) {
-        if (lastError.name === "AbortError") {
-            throw new Error("Overpass API request timed out on all mirrors. Please try again.");
-        }
-        throw new Error(`All Overpass mirrors failed. Last error: ${lastError.message}`);
-    }
+    throw new Error(`All Overpass mirrors failed. Last error: ${lastError?.message || 'Timeout'}`);
 }
 
 // ─── Graph Builder ────────────────────────────────────────────────────────────

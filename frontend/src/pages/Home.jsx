@@ -98,6 +98,31 @@ function ViewportHeatmapLoader({ onViewportChange, onMapReady }) {
   return null;
 }
 
+function RouteLayerCleaner({ trigger, routeLayersRef }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map || !routeLayersRef) return;
+
+    const timer = setTimeout(() => {
+      routeLayersRef.current.forEach((layer) => {
+        try {
+          if (layer && map.hasLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        } catch (e) {
+          // Layer may already be removed
+        }
+      });
+      routeLayersRef.current = [];
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [map, trigger, routeLayersRef]);
+
+  return null;
+}
+
 function useDebouncedSuggestions(query, skip) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -157,6 +182,22 @@ export default function Home() {
   const [heatmapLoading, setHeatmapLoading] = useState(false);
   const mapRef = useRef(null);
   const heatmapDebounceRef = useRef(null);
+  const routeLayersRef = useRef([]);
+  const [routeClearCounter, setRouteClearCounter] = useState(0);
+
+  const clearRouteState = useCallback(() => {
+    setRoutes([]);
+    setSafestRoute(null);
+    setDefaultRoute(null);
+    setFastestRoute(null);
+    setSelectedRoute(0);
+    setRouteCoords([]);
+    setDistance(null);
+    setDuration(null);
+    setStatus("");
+    setStatusType("");
+    setRouteClearCounter((c) => c + 1);
+  }, []);
 
   const fromSuggestions = useDebouncedSuggestions(fromQuery, !!fromCoord);
   const toSuggestions = useDebouncedSuggestions(toQuery, !!toCoord);
@@ -165,19 +206,15 @@ export default function Home() {
     setFromQuery(place.display_name);
     setFromCoord({ lat: parseFloat(place.lat), lng: parseFloat(place.lon), name: place.display_name });
     setShowFromSug(false);
-    setRouteCoords([]);
-    setDistance(null);
-    setDuration(null);
-  }, []);
+    clearRouteState();
+  }, [clearRouteState]);
 
   const pickTo = useCallback((place) => {
     setToQuery(place.display_name);
     setToCoord({ lat: parseFloat(place.lat), lng: parseFloat(place.lon), name: place.display_name });
     setShowToSug(false);
-    setRouteCoords([]);
-    setDistance(null);
-    setDuration(null);
-  }, []);
+    clearRouteState();
+  }, [clearRouteState]);
 
   const swapLocations = useCallback(() => {
     const tempQuery = fromQuery;
@@ -186,28 +223,26 @@ export default function Home() {
     setFromCoord(toCoord);
     setToQuery(tempQuery);
     setToCoord(tempCoord);
-    setRouteCoords([]);
-    setDistance(null);
-    setDuration(null);
-  }, [fromQuery, fromCoord, toQuery, toCoord]);
+    clearRouteState();
+  }, [fromQuery, fromCoord, toQuery, toCoord, clearRouteState]);
 
   const handleMapClick = useCallback((latlng) => {
     if (!fromCoord) {
       setFromQuery(`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`);
       setFromCoord({ lat: latlng.lat, lng: latlng.lng, name: `Pin ${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}` });
+      clearRouteState();
     } else if (!toCoord) {
       setToQuery(`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`);
       setToCoord({ lat: latlng.lat, lng: latlng.lng, name: `Pin ${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}` });
+      clearRouteState();
     } else {
       setFromQuery(`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`);
       setFromCoord({ lat: latlng.lat, lng: latlng.lng, name: `Pin ${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}` });
       setToCoord(null);
       setToQuery("");
-      setRouteCoords([]);
-      setDistance(null);
-      setDuration(null);
+      clearRouteState();
     }
-  }, [fromCoord, toCoord]);
+  }, [fromCoord, toCoord, clearRouteState]);
 
   const locateUser = useCallback(() => {
     if (!navigator.geolocation) {
@@ -233,6 +268,7 @@ export default function Home() {
   };
 
   const findRoute = async () => {
+    clearRouteState();
     setLoading(true);
     setStatus("Looking up locations...");
     setStatusType("");
@@ -346,6 +382,7 @@ export default function Home() {
       console.error("Route fetching error:", err);
       setStatus(message);
       setStatusType("error");
+      clearRouteState();
     }
     setLoading(false);
   };
@@ -683,20 +720,21 @@ export default function Home() {
           <FitBounds coords={routeCoords} />
           <MapResizer onReady={handleViewportChange} />
           <ViewportHeatmapLoader onViewportChange={handleViewportChange} onMapReady={handleMapReady} />
-          {fromCoord && <Marker position={[fromCoord.lat, fromCoord.lng]} icon={START_ICON} />}
-          {toCoord && <Marker position={[toCoord.lat, toCoord.lng]} icon={END_ICON} />}
-          {routeCoords.length > 0 && <Polyline positions={routeCoords} pathOptions={{ color: "#4fd1a5", weight: 5, opacity: 0.9 }} />}
+          <RouteLayerCleaner trigger={routeClearCounter} routeLayersRef={routeLayersRef} />
+          {fromCoord && <Marker key={`from-${routeClearCounter}`} position={[fromCoord.lat, fromCoord.lng]} icon={START_ICON} />}
+          {toCoord && <Marker key={`to-${routeClearCounter}`} position={[toCoord.lat, toCoord.lng]} icon={END_ICON} />}
+          {routeCoords.length > 0 && <Polyline key={`route-${routeClearCounter}`} positions={routeCoords} pathOptions={{ color: "#4fd1a5", weight: 5, opacity: 0.9 }} />}
           {safestRoute && safestRoute.index !== defaultRoute?.index && (
-            <Polyline positions={safestRoute.coords} pathOptions={{ color: "#1d9e75", weight: 4, opacity: 0.7 }} />
+            <Polyline key={`safest-${routeClearCounter}`} positions={safestRoute.coords} pathOptions={{ color: "#1d9e75", weight: 4, opacity: 0.7 }} />
           )}
           {fastestRoute && fastestRoute.index !== defaultRoute?.index && fastestRoute.index !== safestRoute?.index && (
-            <Polyline positions={fastestRoute.coords} pathOptions={{ color: "#f39c12", weight: 4, opacity: 0.7 }} />
+            <Polyline key={`fastest-${routeClearCounter}`} positions={fastestRoute.coords} pathOptions={{ color: "#f39c12", weight: 4, opacity: 0.7 }} />
           )}
           {routes.map((route) => {
             if (route.index === defaultRoute?.index || route.index === safestRoute?.index || route.index === fastestRoute?.index) return null;
             return (
               <Polyline
-                key={route.index}
+                key={`alt-${routeClearCounter}-${route.index}`}
                 positions={route.coords}
                 pathOptions={{ color: "#7f8c8d", weight: 2, opacity: 0.3, dashArray: "8 8" }}
               />

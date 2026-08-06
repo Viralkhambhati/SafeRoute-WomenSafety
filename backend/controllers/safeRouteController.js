@@ -159,9 +159,34 @@ out skel qt;`;
 
     // Updated reliable endpoints order
     const LIVE_ENDPOINTS = [
-        "https://overpass.kumi.systems/api/interpreter",
-        "https://lz4.overpass-api.de/api/interpreter",
-        "https://overpass-api.de/api/interpreter"
+    // 4. Main French Mirror (France)
+    "https://overpass.openstreetmap.fr/api/interpreter",
+
+    "https://overpass-api.de/api/interpreter",
+    
+    // 2. Kumi Systems Mirror (Very Fast & Reliable)
+    "https://overpass.kumi.systems/api/interpreter",
+    
+    // 3. LZ4 Alternative Mirror (Germany)
+    "https://lz4.overpass-api.de/api/interpreter",
+    
+    // 5. Zalando Public Mirror
+    "https://overpass.osm.ch/api/interpreter",
+    
+    // 6. Private Router Mirror (EU)
+    "https://overpass.private.coffee/api/interpreter",
+    
+    // 7. OpenStreetMap Taiwan Mirror (Asia - Good for low latency)
+    "https://overpass.api.openstreetmap.tw/api/interpreter",
+    
+    // 8. Mail.ru Mirror
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    
+    // 9. Nectar Server Mirror
+    "https://overpass.nchc.org.tw/api/interpreter",
+    
+    // 10. LocationIQ (API Key Required - Best for Render/Live Server)
+    `https://us1.locationiq.com/v1/overpass.php?key=${process.env.LOCATIONIQ_API_KEY}`
     ];
 
     let lastError;

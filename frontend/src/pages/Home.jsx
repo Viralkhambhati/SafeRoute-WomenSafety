@@ -717,12 +717,12 @@ export default function Home() {
               <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20z" />
             </svg>
           </button>
-          <button className="map-control-btn" onClick={locateUser} title="My Location">
+          {/*<button className="map-control-btn" onClick={locateUser} title="My Location">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="4" />
               <path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
             </svg>
-          </button>
+          </button>*/}
         </div>
       </main>
     </div>

@@ -509,7 +509,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        <button className="navbar-rating-btn" onClick={handleLogout} style={{ margin: "0 24px 20px" }}>
+        <button className="navbar-rating-btn dashboard-logout-btn" onClick={handleLogout}>
           Logout
         </button>
       </aside>

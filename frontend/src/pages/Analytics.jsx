@@ -66,28 +66,17 @@ export default function Analytics() {
     }));
 
     return (
-        <div style={{ padding: "80px 20px 40px", backgroundColor: "#0b1120", color: "#f8fafc", minHeight: "100vh" }}>
-            <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+        <div className="analytics-page">
+            <div className="analytics-container">
 
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+                <div className="analytics-header">
                     <div>
-                        <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>Community Safety Analytics</h1>
-                        <p style={{ fontSize: "1.1rem", color: "#94a3b8" }}>Aggregated real-time metrics from actual user area reports.</p>
+                        <h1 className="analytics-title">Community Safety Analytics</h1>
+                        <p className="analytics-subtitle">Aggregated real-time metrics from actual user area reports.</p>
                     </div>
                     <button
                         onClick={() => navigate("/add-rating")}
-                        style={{
-                            padding: "12px 24px",
-                            background: "#10B981",
-                            color: "#0b1120",
-                            fontWeight: "bold",
-                            borderRadius: "8px",
-                            border: "none",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px"
-                        }}
+                        className="analytics-add-btn"
                     >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -98,69 +87,44 @@ export default function Analytics() {
                 </div>
 
                 {loading ? (
-                    <div style={{ textAlign: "center", padding: "5rem 0", color: "#94a3b8" }}>
+                    <div className="analytics-loading">
                         <div className="rating-spinner" style={{ display: "inline-block", marginBottom: "1rem" }}></div>
                         <p>Loading real dataset...</p>
                     </div>
                 ) : (
                     <>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px", marginBottom: "2rem" }}>
+                        <div className="analytics-stats-grid">
 
-                            <div style={{
-                                background: "rgba(30, 41, 59, 0.7)",
-                                backdropFilter: "blur(12px)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                padding: "1.5rem",
-                                borderRadius: "1rem"
-                            }}>
-                                <h3 style={{ fontSize: "1.1rem", color: "#94a3b8", marginBottom: "0.5rem" }}>Total Rated Locations</h3>
-                                <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#4fd1a5" }}>
+                            <div className="analytics-stat-card">
+                                <h3 className="analytics-stat-label">Total Rated Locations</h3>
+                                <div className="analytics-stat-value analytics-stat-green">
                                     {totalPoints}
                                 </div>
-                                <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginTop: "0.25rem" }}>Unique areas</p>
+                                <p className="analytics-stat-desc">Unique areas</p>
                             </div>
 
-                            <div style={{
-                                background: "rgba(30, 41, 59, 0.7)",
-                                backdropFilter: "blur(12px)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                padding: "1.5rem",
-                                borderRadius: "1rem"
-                            }}>
-                                <h3 style={{ fontSize: "1.1rem", color: "#94a3b8", marginBottom: "0.5rem" }}>Average Safety Score</h3>
-                                <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: avgOverallScore > 7 ? "#10b981" : avgOverallScore > 4 ? "#f59e0b" : "#ef4444" }}>
+                            <div className="analytics-stat-card">
+                                <h3 className="analytics-stat-label">Average Safety Score</h3>
+                                <div className={`analytics-stat-value ${avgOverallScore > 7 ? "analytics-stat-green" : avgOverallScore > 4 ? "analytics-stat-yellow" : "analytics-stat-red"}`}>
                                     {avgOverallScore} / 10
                                 </div>
-                                <p style={{ color: avgOverallScore > 7 ? "#10b981" : avgOverallScore > 4 ? "#f59e0b" : "#ef4444", fontSize: "0.9rem", marginTop: "0.25rem" }}>
+                                <p className={`analytics-stat-desc ${avgOverallScore > 7 ? "analytics-stat-green" : avgOverallScore > 4 ? "analytics-stat-yellow" : "analytics-stat-red"}`}>
                                     {avgOverallScore > 7 ? "🟢 Safe" : avgOverallScore > 4 ? "🟡 Moderate" : "🔴 Risky"}
                                 </p>
                             </div>
 
-                            <div style={{
-                                background: "rgba(30, 41, 59, 0.7)",
-                                backdropFilter: "blur(12px)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                padding: "1.5rem",
-                                borderRadius: "1rem"
-                            }}>
-                                <h3 style={{ fontSize: "1.1rem", color: "#94a3b8", marginBottom: "0.5rem" }}>Total Community Reports</h3>
-                                <div style={{ fontSize: "2.5rem", fontWeight: "bold", color: "#f59e0b" }}>
+                            <div className="analytics-stat-card">
+                                <h3 className="analytics-stat-label">Total Community Reports</h3>
+                                <div className="analytics-stat-value analytics-stat-yellow">
                                     {totalReports}
                                 </div>
-                                <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginTop: "0.25rem" }}>User submissions</p>
+                                <p className="analytics-stat-desc">User submissions</p>
                             </div>
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                            <div style={{
-                                background: "rgba(30, 41, 59, 0.7)",
-                                backdropFilter: "blur(12px)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                padding: "2rem",
-                                borderRadius: "1rem",
-                                height: "400px"
-                            }}>
-                                <h2 style={{ marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "600", textAlign: "center" }}>Safety Category Breakdown</h2>
+                        <div className="analytics-charts-grid">
+                            <div className="analytics-chart-card">
+                                <h2 className="analytics-chart-title">Safety Category Breakdown</h2>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
@@ -185,16 +149,9 @@ export default function Analytics() {
                                 </ResponsiveContainer>
                             </div>
 
-                            <div style={{
-                                background: "rgba(30, 41, 59, 0.7)",
-                                backdropFilter: "blur(12px)",
-                                border: "1px solid rgba(255,255,255,0.1)",
-                                padding: "2rem",
-                                borderRadius: "1rem",
-                                height: "400px"
-                            }}>
-                                <h2 style={{ marginBottom: "1.5rem", fontSize: "1.2rem", fontWeight: "600", textAlign: "center" }}>Locations by Score Bracket</h2>
-                                <ResponsiveContainer width="100%" height="85%">
+                            <div className="analytics-chart-card">
+                                <h2 className="analytics-chart-title">Locations by Score Bracket</h2>
+                                <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={barData} margin={{ top: 10, right: 30, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                                         <XAxis dataKey="bracket" stroke="#cbd5e1" tick={{ fill: '#cbd5e1' }} axisLine={false} tickLine={false} />

@@ -15,7 +15,33 @@
     const PORT = process.env.PORT || 5000;
 
     const corsOptions = {
-      origin: process.env.FRONTEND_URL || "*",
+      origin: (origin, callback) => {
+        const frontendUrl = process.env.FRONTEND_URL;
+        const allowedOrigins = new Set();
+
+        if (frontendUrl && frontendUrl !== "*") {
+          allowedOrigins.add(frontendUrl);
+        }
+
+        allowedOrigins.add("http://localhost:5173");
+        allowedOrigins.add("http://localhost:3000");
+        allowedOrigins.add("http://localhost:5000");
+        allowedOrigins.add("http://127.0.0.1:5173");
+        allowedOrigins.add("http://127.0.0.1:3000");
+        allowedOrigins.add("http://127.0.0.1:5000");
+
+        const isLocalNetworkOrigin =
+          origin &&
+          (origin.startsWith("http://192.168.") ||
+            origin.startsWith("http://10.") ||
+            origin.startsWith("http://172."));
+
+        if (!origin || allowedOrigins.has(origin) || isLocalNetworkOrigin || frontendUrl === "*") {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
     };
     app.use(cors(corsOptions));
     app.use(express.json());

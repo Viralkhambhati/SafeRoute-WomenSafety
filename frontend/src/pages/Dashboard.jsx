@@ -509,9 +509,9 @@ export default function Dashboard() {
           )}
         </div>
 
-        <button className="navbar-rating-btn dashboard-logout-btn" onClick={handleLogout}>
+        {/* <button className="navbar-rating-btn dashboard-logout-btn" onClick={handleLogout}>
           Logout
-        </button>
+        </button> */}
       </aside>
 
       <main className="home-map">

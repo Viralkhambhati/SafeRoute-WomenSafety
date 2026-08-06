@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import HeatmapLayer from "../components/HeatmapLayer";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../services/api";
 import "../style/Home.css";
 
 const START_ICON = L.divIcon({
@@ -262,7 +263,7 @@ export default function Dashboard() {
           params.append("radius", 5);
         }
 
-        const response = await fetch(`http://localhost:5000/api/heatmap?${params.toString()}`);
+        const response = await fetch(`${API_BASE_URL}/heatmap?${params.toString()}`);
         const data = await response.json();
         if (data.success) {
           setHeatmapData(data.data || []);
@@ -320,7 +321,7 @@ export default function Dashboard() {
     setRatingLoading(true);
     setRatingMessage("");
     try {
-      const response = await fetch("http://localhost:5000/api/heatmap/report", {
+      const response = await fetch(`${API_BASE_URL}/heatmap/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

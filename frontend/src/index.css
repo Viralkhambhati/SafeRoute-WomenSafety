@@ -522,11 +522,28 @@ textarea::placeholder {
     border-radius: 20px;
   }
 
-  .saferoute-nav-links {
+  .saferoute-navbar {
+    padding: 0 16px;
+  }
+
+  /* On mobile, hide text-only nav links, keep CTA buttons */
+  .saferoute-nav-link {
     display: none;
   }
 
-  .saferoute-navbar {
-    padding: 0 16px;
+  /* Keep signin/signout/add-rating buttons visible */
+  .saferoute-nav-links .saferoute-signin-btn,
+  .saferoute-nav-links .saferoute-signout-btn {
+    display: flex;
+  }
+
+  /* Hide the user dot on tiny screens */
+  .saferoute-user-dot {
+    display: none;
+  }
+
+  .saferoute-signin-btn {
+    padding: 8px 14px;
+    font-size: 13px;
   }
 }

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Polyline, useMap, useMapEvents } from 
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import HeatmapLayer from "../components/HeatmapLayer";
+import { API_BASE_URL } from "../services/api";
 import "../style/Home.css";
 
 const START_ICON = L.divIcon({
@@ -47,6 +48,26 @@ function FitBounds({ coords }) {
   }, [coords, map]);
   return null;
 }
+
+// Fixes Leaflet tile & heatmap rendering on mobile when container size changes
+function MapResizer({ onReady }) {
+  const map = useMap();
+  useEffect(() => {
+    setTimeout(() => {
+      map.invalidateSize();
+      // Re-trigger heatmap fetch after map has correct bounds on mobile
+      if (onReady) onReady(map);
+    }, 150);
+    const handleResize = () => {
+      map.invalidateSize();
+      if (onReady) onReady(map);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [map, onReady]);
+  return null;
+}
+
 
 function ViewportHeatmapLoader({ onViewportChange, onMapReady }) {
   const map = useMap();
@@ -263,7 +284,7 @@ export default function Home() {
 
       let safestRoute = null;
       try {
-        const safeRes = await fetch("http://localhost:5000/api/safe-route", {
+        const safeRes = await fetch(`${API_BASE_URL}/safe-route`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -369,7 +390,7 @@ export default function Home() {
           params.append("radius", 5);
         }
 
-        const response = await fetch(`http://localhost:5000/api/heatmap?${params.toString()}`);
+        const response = await fetch(`${API_BASE_URL}/heatmap?${params.toString()}`);
         const data = await response.json();
         if (data.success) {
           setHeatmapData(data.data || []);
@@ -661,6 +682,7 @@ export default function Home() {
           />
           <MapEvents onMapClick={handleMapClick} />
           <FitBounds coords={routeCoords} />
+          <MapResizer onReady={handleViewportChange} />
           <ViewportHeatmapLoader onViewportChange={handleViewportChange} onMapReady={handleMapReady} />
           {fromCoord && <Marker position={[fromCoord.lat, fromCoord.lng]} icon={START_ICON} />}
           {toCoord && <Marker position={[toCoord.lat, toCoord.lng]} icon={END_ICON} />}

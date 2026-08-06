@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { API_BASE_URL } from "../services/api";
 
 export default function Analytics() {
     const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function Analytics() {
         async function fetchRealData() {
             try {
                 // Fetch real data from the backend heatmap endpoint (wide radius to capture region)
-                const response = await fetch("http://localhost:5000/api/heatmap?lat=21.1702&lng=72.8311&radius=500");
+                const response = await fetch(`${API_BASE_URL}/heatmap?lat=21.1702&lng=72.8311&radius=500`);
                 const json = await response.json();
 
                 if (json.success && json.data) {

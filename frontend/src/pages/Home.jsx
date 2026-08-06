@@ -557,97 +557,96 @@ export default function Home() {
           <button className="btn btn-ghost-full" onClick={clearAll}>Clear</button>
 
           {status && <div className={`status ${statusType}`}>{status}</div>}
-        </div>
 
-        {(defaultRoute || safestRoute || fastestRoute) && (
-          <div className="route-cards">
-            <h3 className="route-cards-title">Route Options</h3>
-            <div className="route-cards-list">
-              {defaultRoute && (
-                <div
-                  className={`route-card ${selectedRoute === 0 ? "active" : ""}`}
-                  onClick={() => {
-                    setSelectedRoute(0);
-                    setRouteCoords(defaultRoute.coords);
-                    setDistance(defaultRoute.distance);
-                    setDuration(defaultRoute.duration);
-                  }}
-                >
-                  <div className="route-card-header">
-                    <span className="route-badge default">Default</span>
+          {(defaultRoute || safestRoute || fastestRoute) && (
+            <div className="route-cards">
+              <h3 className="route-cards-title">Route Options</h3>
+              <div className="route-cards-list">
+                {defaultRoute && (
+                  <div
+                    className={`route-card ${selectedRoute === 0 ? "active" : ""}`}
+                    onClick={() => {
+                      setSelectedRoute(0);
+                      setRouteCoords(defaultRoute.coords);
+                      setDistance(defaultRoute.distance);
+                      setDuration(defaultRoute.duration);
+                    }}
+                  >
+                    <div className="route-card-header">
+                      <span className="route-badge default">Default</span>
+                    </div>
+                    <div className="route-card-body">
+                      <span className="route-info">{defaultRoute.distance} km · {defaultRoute.duration} min</span>
+                    </div>
                   </div>
-                  <div className="route-card-body">
-                    <span className="route-info">{defaultRoute.distance} km · {defaultRoute.duration} min</span>
+                )}
+                {safestRoute && (
+                  <div
+                    className={`route-card safest ${selectedRoute === 1 ? "active" : ""}`}
+                    onClick={() => {
+                      setSelectedRoute(1);
+                      setRouteCoords(safestRoute.coords);
+                      setDistance(safestRoute.distance);
+                      setDuration(safestRoute.duration);
+                    }}
+                  >
+                    <div className="route-card-header">
+                      <span className="route-badge safest">Safe - Avoid the Red Zone</span>
+                    </div>
+                    <div className="route-card-body">
+                      <span className="route-info">{safestRoute.distance} km · {safestRoute.duration} min</span>
+                    </div>
                   </div>
-                </div>
-              )}
-              {safestRoute && (
-                <div
-                  className={`route-card safest ${selectedRoute === 1 ? "active" : ""}`}
-                  onClick={() => {
-                    setSelectedRoute(1);
-                    setRouteCoords(safestRoute.coords);
-                    setDistance(safestRoute.distance);
-                    setDuration(safestRoute.duration);
-                  }}
-                >
-                  <div className="route-card-header">
-                    <span className="route-badge safest">Safe - Avoid the Red Zone</span>
+                )}
+                {fastestRoute && (
+                  <div
+                    className={`route-card fastest ${selectedRoute === 2 ? "active" : ""}`}
+                    onClick={() => {
+                      setSelectedRoute(2);
+                      setRouteCoords(fastestRoute.coords);
+                      setDistance(fastestRoute.distance);
+                      setDuration(fastestRoute.duration);
+                    }}
+                  >
+                    <div className="route-card-header">
+                      <span className="route-badge fastest">Fastest - Fastest Route</span>
+                    </div>
+                    <div className="route-card-body">
+                      <span className="route-info">{fastestRoute.distance} km · {fastestRoute.duration} min</span>
+                    </div>
                   </div>
-                  <div className="route-card-body">
-                    <span className="route-info">{safestRoute.distance} km · {safestRoute.duration} min</span>
-                  </div>
-                </div>
-              )}
-              {fastestRoute && (
-                <div
-                  className={`route-card fastest ${selectedRoute === 2 ? "active" : ""}`}
-                  onClick={() => {
-                    setSelectedRoute(2);
-                    setRouteCoords(fastestRoute.coords);
-                    setDistance(fastestRoute.distance);
-                    setDuration(fastestRoute.duration);
-                  }}
-                >
-                  <div className="route-card-header">
-                    <span className="route-badge fastest">Fastest - Fastest Route</span>
-                  </div>
-                  <div className="route-card-body">
-                    <span className="route-info">{fastestRoute.distance} km · {fastestRoute.duration} min</span>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {fromCoord && toCoord && (() => {
-          let href = `https://www.google.com/maps/dir/?api=1&origin=${fromCoord.lat},${fromCoord.lng}&destination=${toCoord.lat},${toCoord.lng}&travelmode=driving`;
+          {fromCoord && toCoord && (() => {
+            let href = `https://www.google.com/maps/dir/?api=1&origin=${fromCoord.lat},${fromCoord.lng}&destination=${toCoord.lat},${toCoord.lng}&travelmode=driving`;
 
-          if (selectedRouteData && selectedRouteData.coords && selectedRouteData.coords.length > 5) {
-            const coords = selectedRouteData.coords;
-            const samples = [];
-            // Pick 8 evenly spaced waypoints from the raw geometry to force the path
-            const step = Math.max(1, Math.floor(coords.length / 9));
-            for (let i = step; i < coords.length - 1; i += step) {
-              samples.push(`${coords[i][0]},${coords[i][1]}`);
-              if (samples.length >= 8) break;
+            if (selectedRouteData && selectedRouteData.coords && selectedRouteData.coords.length > 5) {
+              const coords = selectedRouteData.coords;
+              const samples = [];
+              const step = Math.max(1, Math.floor(coords.length / 9));
+              for (let i = step; i < coords.length - 1; i += step) {
+                samples.push(`${coords[i][0]},${coords[i][1]}`);
+                if (samples.length >= 8) break;
+              }
+              if (samples.length > 0) {
+                href += `&waypoints=${samples.join('|')}`;
+              }
             }
-            if (samples.length > 0) {
-              href += `&waypoints=${samples.join('|')}`;
-            }
-          }
-          return (
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="google-maps-btn"
-            >
-              Open Safe Route in Google Maps
-            </a>
-          );
-        })()}
+            return (
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="google-maps-btn"
+              >
+                Open Safe Route in Google Maps
+              </a>
+            );
+          })()}
+        </div>
       </aside>
 
       <main className="home-map">

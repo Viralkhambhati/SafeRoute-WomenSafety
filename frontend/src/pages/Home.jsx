@@ -642,7 +642,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="google-maps-btn"
               >
-                Open Safe Route in Google Maps
+                Open Selected Route in Google Maps
               </a>
             );
           })()}

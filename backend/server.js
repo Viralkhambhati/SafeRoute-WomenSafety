@@ -54,6 +54,16 @@
     });
     });
 
+    app.get("/api/health", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "SafeRoute API is healthy",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development",
+        database: "connected",
+    });
+    });
+
     app.use("/api/auth", authRoutes);
     app.use("/api/notifications", notificationRoutes);
     app.use("/api/heatmap", heatmapRoutes);

@@ -89,8 +89,65 @@ function edgePenalty(lat, lng, redZones) {
     return maxPenalty;
 }
 
+// ─── Overpass Mirrors + Cache ──────────────────────────────────────────────────
+// Multiple public Overpass instances — if one refuses/times out, the next is tried.
+// Order matters: put the most reliable one first.
+const OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://lz4.overpass-api.de/api/interpreter",
+];
+
+// IMPORTANT: replace with your real contact info. Public Overpass instances are
+// more likely to soft-block/rate-limit requests with generic/anonymous User-Agents,
+// especially from datacenter IPs (Render, AWS, etc).
+const OVERPASS_USER_AGENT = "SafeRoute/1.0 (contact: studytime24680@gmail.com)";
+
+// Simple in-memory response cache so repeated requests for the same area
+// (e.g. multiple users routing through the same neighborhood) don't all
+// hit Overpass. Not persistent — resets on server restart/deploy.
+const osmCache = new Map(); // key -> { data, expiresAt }
+const OSM_CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+const OSM_CACHE_MAX_ENTRIES = 200;
+
+function bboxCacheKey(south, west, north, east) {
+    // Round to ~5 decimal places (~1m precision) so near-identical bboxes share a cache entry
+    const r = (n) => Math.round(n * 1e5) / 1e5;
+    return `${r(south)},${r(west)},${r(north)},${r(east)}`;
+}
+
+function getCachedOSM(key) {
+    const entry = osmCache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+        osmCache.delete(key);
+        return null;
+    }
+    return entry.data;
+}
+
+function setCachedOSM(key, data) {
+    if (osmCache.size >= OSM_CACHE_MAX_ENTRIES) {
+        // Evict oldest entry (Map preserves insertion order)
+        const oldestKey = osmCache.keys().next().value;
+        osmCache.delete(oldestKey);
+    }
+    osmCache.set(key, { data, expiresAt: Date.now() + OSM_CACHE_TTL_MS });
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ─── Overpass OSM Fetch ───────────────────────────────────────────────────────
 async function fetchOSMData(south, west, north, east) {
+    const cacheKey = bboxCacheKey(south, west, north, east);
+    const cached = getCachedOSM(cacheKey);
+    if (cached) {
+        console.log(`OSM cache hit for bbox ${cacheKey}`);
+        return cached;
+    }
+
     const query = `
     [out:json][timeout:25];
     (
@@ -100,11 +157,15 @@ async function fetchOSMData(south, west, north, east) {
     >;
     out skel qt;
   `;
-    const url = new URL("https://overpass-api.de/api/interpreter");
-    url.searchParams.set("data", query);
 
     let lastError;
-    for (let attempt = 1; attempt <= 2; attempt++) {
+    const backoffMs = [1000, 2000, 4000]; // one delay per retry attempt across mirrors
+
+    let attempt = 0;
+    for (const endpoint of OVERPASS_ENDPOINTS) {
+        const url = new URL(endpoint);
+        url.searchParams.set("data", query);
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -113,7 +174,7 @@ async function fetchOSMData(south, west, north, east) {
                 method: "GET",
                 headers: {
                     "Accept": "*/*",
-                    "User-Agent": "SafeRoute/1.0",
+                    "User-Agent": OVERPASS_USER_AGENT,
                 },
                 signal: controller.signal,
             });
@@ -131,23 +192,36 @@ async function fetchOSMData(south, west, north, east) {
                 if (el.type === "node") nodes.set(String(el.id), { lat: el.lat, lng: el.lon });
                 else if (el.type === "way" && el.nodes) ways.push({ nodes: el.nodes.map(String) });
             }
-            return { nodes, ways };
+
+            const result = { nodes, ways };
+            setCachedOSM(cacheKey, result);
+            if (attempt > 0) console.log(`Overpass succeeded on mirror #${attempt + 1} (${endpoint})`);
+            return result;
         } catch (err) {
             clearTimeout(timeoutId);
             lastError = err;
-            if (attempt === 1) {
-                await new Promise(r => setTimeout(r, 1000));
-                continue;
+            // Log the FULL reason — err.cause holds the real system error
+            // (ENOTFOUND, ECONNREFUSED, timeout, etc) that was getting lost before.
+            console.warn(
+                `Overpass endpoint failed [${endpoint}]:`,
+                err.message,
+                "| cause:", err.cause?.message || err.cause || err.code || "unknown"
+            );
+
+            attempt++;
+            if (attempt < OVERPASS_ENDPOINTS.length) {
+                const delay = backoffMs[attempt - 1] || 4000;
+                await sleep(delay);
             }
-            break;
         }
     }
 
+    // All mirrors exhausted
     if (lastError) {
         if (lastError.name === "AbortError") {
-            throw new Error("Overpass API request timed out. Please try again.");
+            throw new Error("Overpass API request timed out on all mirrors. Please try again.");
         }
-        throw lastError;
+        throw new Error(`All Overpass mirrors failed. Last error: ${lastError.message}`);
     }
 }
 
@@ -223,7 +297,7 @@ exports.getSafeRoute = async (req, res) => {
         const west = Math.min(start.lng, end.lng) - pad;
         const east = Math.max(start.lng, end.lng) + pad;
 
-        // 1. Fetch OSM road graph
+        // 1. Fetch OSM road graph (mirrors + backoff + cache handled inside)
         const { nodes, ways } = await fetchOSMData(south, west, north, east);
         if (nodes.size === 0) {
             return res.status(422).json({ success: false, message: "No road network found in area" });
@@ -258,9 +332,14 @@ exports.getSafeRoute = async (req, res) => {
         });
 
     } catch (err) {
+        // Log full detail: message + cause/code, so Render logs actually tell you why it failed
+        console.error(
+            "Safe route error:",
+            err.message,
+            "| cause:", err.cause?.message || err.cause || err.code || "unknown"
+        );
         const message = err.message || "Network error";
-        console.error("Safe route error:", message);
-        if (message.includes("Overpass API error") || message.includes("fetch failed")) {
+        if (message.includes("Overpass") || message.includes("fetch failed")) {
             return res.status(502).json({ success: false, message: "Route service unavailable. Please try again later." });
         }
         return res.status(500).json({ success: false, message: "Unable to calculate safe route. Please try again." });

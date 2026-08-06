@@ -2,7 +2,6 @@
     const cors = require("cors");
     require("dotenv").config();
 
-    const todoRoutes = require("./routes/todoRoutes");
     const authRoutes = require("./routes/authRoutes");
     const notificationRoutes = require("./routes/notificationRoutes");
     const heatmapRoutes = require("./routes/heatmapRoutes");
@@ -25,12 +24,11 @@
     app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "Todo API is Running Successfully",
+        message: "API is Running Successfully",
     });
     });
 
     app.use("/api/auth", authRoutes);
-    app.use("/api/todos", todoRoutes);
     app.use("/api/notifications", notificationRoutes);
     app.use("/api/heatmap", heatmapRoutes);
     app.use("/api/safe-route", safeRouteRoutes);

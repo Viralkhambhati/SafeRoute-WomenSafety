@@ -442,7 +442,7 @@ export default function Dashboard() {
               </div>
 
               {/* Live Score Preview */}
-              {ratingStep === ratingQuestions.length - 1 && (
+              {/* {ratingStep === ratingQuestions.length - 1 && (
                 <div className={`rating-score-preview rating-score-${ratingCategory}`}>
                   <span className="rating-score-label">Predicted Score</span>
                   <span className="rating-score-value">{calculateFinalScore().toFixed(1)} / 10</span>
@@ -450,7 +450,7 @@ export default function Dashboard() {
                     {ratingCategory === "safe" ? "🟢 Safe" : ratingCategory === "moderate" ? "🟡 Moderate" : "🔴 Risky"}
                   </span>
                 </div>
-              )}
+              )} */}
 
               {/* Navigation */}
               <div className="rating-nav">

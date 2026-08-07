@@ -107,13 +107,14 @@ textarea::placeholder {
 .saferoute-nav-links {
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex: 1;
-  justify-content: center;
+  gap: 6px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .saferoute-nav-link {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 8px 16px;
@@ -123,26 +124,66 @@ textarea::placeholder {
   color: #94a7bd;
   text-decoration: none;
   transition: all 0.2s ease;
-  position: relative;
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 .saferoute-nav-link:hover {
   color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .saferoute-nav-link.active {
   color: #10B981;
   background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
-/* CTA */
-.saferoute-nav-cta {
+/* Actions */
+.saferoute-nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.saferoute-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+  text-decoration: none;
+}
+
+.saferoute-action-primary {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.saferoute-action-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #12c78e, #06a371);
+}
+
+.saferoute-action-ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.saferoute-action-ghost:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.05);
 }
 
 .saferoute-user-dot {
@@ -164,50 +205,6 @@ textarea::placeholder {
   50% {
     box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.1);
   }
-}
-
-.saferoute-signin-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 18px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #10B981, #059669);
-  border: none;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-  transition: all 0.25s;
-}
-
-.saferoute-signin-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-}
-
-.saferoute-signout-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
-  border-radius: 10px;
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.saferoute-signout-btn:hover {
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #f87171;
-  background: rgba(239, 68, 68, 0.05);
 }
 
 /* Legacy navbar classes kept for any references */
@@ -701,7 +698,8 @@ textarea::placeholder {
     display: flex;
   }
 
-  .saferoute-nav-links {
+  .saferoute-nav-links,
+  .saferoute-nav-actions {
     display: none;
   }
 }

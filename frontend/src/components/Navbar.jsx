@@ -112,8 +112,7 @@ function Navbar() {
       </div>
 
       {/* Mobile Menu Button */}
-      {path !== "/add-rating" && (
-        <button
+      <button
         className="saferoute-mobile-menu-btn"
         onClick={() => setMobileOpen((prev) => !prev)}
         aria-label="Toggle menu"
@@ -124,7 +123,6 @@ function Navbar() {
           <span />
         </span>
       </button>
-      )}
 
       {/* Mobile Right Side Menu */}
       <div className={`saferoute-mobile-menu ${mobileOpen ? "open" : ""}`}>

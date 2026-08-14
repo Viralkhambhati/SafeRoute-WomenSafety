@@ -8,11 +8,13 @@ import Navbar from "./components/Navbar.jsx";
 import About from "./pages/About.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import InstallPrompt from "./components/InstallPrompt.jsx";
 
 export default function App() {
   return (
     <>
       <Navbar />
+      <InstallPrompt />
       <Routes>
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />

@@ -18,6 +18,9 @@ if ("serviceWorker" in navigator) {
       .register("/sw.js")
       .then((registration) => {
         console.log("SW registered:", registration);
+        registration.addEventListener("updatefound", () => {
+          console.log("SW update found");
+        });
       })
       .catch((error) => {
         console.log("SW registration failed:", error);

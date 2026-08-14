@@ -1,0 +1,23 @@
+{
+  "name": "SafeRoute",
+  "short_name": "SafeRoute",
+  "description": "SafeRoute helps you navigate safely with route insights and alerts.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

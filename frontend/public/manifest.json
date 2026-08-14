@@ -10,12 +10,12 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     },
     {
-      "src": "/icons.svg",
+      "src": "/app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }

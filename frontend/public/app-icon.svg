@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SafeRoute logo">
+  <defs>
+    <linearGradient id="bg" x1="96" y1="64" x2="416" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#08111f"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="160" y1="96" x2="352" y2="416" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#bg)"/>
+  <path d="M256 82 374 136v96c0 87-57 157-118 198-61-41-118-111-118-198v-96l118-54Z" fill="url(#mark)"/>
+  <path d="M256 145c-54 0-99 44-99 99 0 55 45 99 99 99s99-44 99-99c0-55-45-99-99-99Zm0 44c30 0 55 25 55 55 0 30-25 55-55 55s-55-25-55-55c0-30 25-55 55-55Z" fill="#0b1220" opacity=".22"/>
+  <path d="M256 160c-46 0-84 38-84 84s38 84 84 84 84-38 84-84-38-84-84-84Zm0 32c28 0 52 24 52 52s-24 52-52 52-52-24-52-52 24-52 52-52Z" fill="#ffffff"/>
+  <path d="M256 208c-20 0-36 16-36 36s16 36 36 36 36-16 36-36-16-36-36-36Z" fill="#10b981"/>
+  <path d="M184 304c20 32 41 58 72 82 31-24 52-50 72-82" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
